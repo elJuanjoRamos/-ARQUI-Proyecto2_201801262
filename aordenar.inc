@@ -8,6 +8,7 @@ PUSH AX
 PUSH SI
 MOV DI, 0
 MOV SI, 0
+MOV Bl, 0
 INICIO:
     MOV AL,buffer[DI] 
     CMP al, '+'
@@ -17,7 +18,7 @@ INICIO:
     INC DI
     JMP INICIO
 GETPUNTO1:
-    ;clear arraypuntos
+    clear arraypuntos
     INC DI
     JMP GETPUNTO    
 GETPUNTO:
@@ -29,16 +30,18 @@ GETPUNTO:
     INC SI 
     JMP GETPUNTO
 FIN:
-;MOV arraypuntos[SI], ','
 
-;INC SI
+CovertirAscii arraypuntos
+printChar AL
+MOV arraynumeros[0], Al
+INC BX
 INC DI 
 
 JMP INICIO
 
 ENDF:
 print arraypuntos
-call ord 
+;call ord 
 POP SI
 POP AX
 POP DI
@@ -67,8 +70,6 @@ CICLO1:
 CICLO2:
     INC DI
     MOV AL, [SI]
-    CMP AL, '$'
-    JE FIN
     CMP AL, [DI]
     JA INTERCAMBIO
     JB MENOR

@@ -38,10 +38,12 @@ FIN:
 endm
 
 
-getlogin macro buffer
-LOCAL INICIO,FIN
-	xor si,si
+getUser macro buffer
+LOCAL INICIO,FIN, FIN2, EXIT
+	MOV SI, 0
 INICIO:
+	CMP SI, 8
+	JE FIN2
 	getChar
 	cmp al,0dh
 	je FIN
@@ -50,7 +52,75 @@ INICIO:
 	jmp INICIO
 FIN:
 	mov buffer[si],'$'
+	JMP EXIT
+FIN2:
+	print salto
+    print msmError5
+    getChar
+    print salto
+JMP REGISTRAR
+EXIT:
+
 endm
+
+
+
+
+getPassword macro buffer
+LOCAL INICIO,FIN, FIN2,INSERT, EXIT
+	MOV SI, 0
+INICIO:
+	CMP SI, 5
+	JE FIN2
+	getChar
+	cmp al,0dh
+	je FIN
+	CMP AL, '0'
+	JE INSERT
+	CMP AL, '1'
+	JE INSERT
+	CMP AL, '2'
+	JE INSERT
+	CMP AL, '3'
+	JE INSERT
+	CMP AL, '4'
+	JE INSERT
+	CMP AL, '5'
+	JE INSERT
+	CMP AL, '6'
+	JE INSERT
+	CMP AL, '7'
+	JE INSERT
+	CMP AL, '8'
+	JE INSERT
+	CMP AL, '9'
+	JE INSERT
+	print salto
+    print msmError7
+    getChar
+    print salto
+	JMP REGISTRAR
+INSERT:
+	mov buffer[si],al
+	inc si
+	jmp INICIO
+
+FIN:
+	mov buffer[si],'$'
+	JMP EXIT
+FIN2:
+	print salto
+    print msmError6
+    getChar
+    print salto
+	JMP REGISTRAR
+EXIT: 
+endm
+
+
+
+
+
 
 
 
@@ -140,10 +210,10 @@ endm
 
 CovertirAscii macro numero
 	LOCAL INICIO,FIN
-	xor ax,ax
-	xor bx,bx
-	xor cx,cx
-	mov bx,10	;multiplicador 10
+	xor al,al
+	xor bl,bl
+	xor cl,cl
+	mov bl,10	;multiplicador 10
 	xor si,si
 	INICIO:
 		mov cl,numero[si] 
@@ -153,8 +223,8 @@ CovertirAscii macro numero
 		jg FIN
 		inc si
 		sub cl,48	;restar 48 para que me de el numero
-		mul bx		;multplicar ax por 10
-		add ax,cx	;sumar lo que tengo mas el siguiente
+		mul bl		;multplicar ax por 10
+		add al,cl	;sumar lo que tengo mas el siguiente
 		jmp INICIO
 	FIN:
 endm
@@ -213,4 +283,12 @@ SALIR:
     XOR DI, DI
     POP DI
 endm
+
+
+
+
+
+
+
+
 

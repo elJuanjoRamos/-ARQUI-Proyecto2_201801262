@@ -1,0 +1,120 @@
+
+ENTER_VIDEOMODE MACRO 
+	PUSH_VARS  
+    MOV AH, 00h ; video mode
+    MOV AL, 13h
+    int 10H
+	MOV ax,0A000h
+	MOV ds ,ax
+    POP_VARS
+    MOV AH, 0Bh ; set configuracion
+    MOV BH, 00h ; background color
+    MOV BL, 00h ; color para el background
+    INT 10H     ; ejecutar configuracion
+
+ENDM 
+
+
+DRAW_BLOCK macro 
+	local BUCLE,REPETIR, fin
+	
+		MOV BX, 0 
+		MOV DI, 6736 ;pixel de inicio = esquina superior izquierda
+		MOV SI, 0
+		MOV DX, 3 ; color 
+		MOV CX, 3FC0h;1388h;bx ;
+	
+		BUCLE:
+			MOV [DI],dx 
+			INC DI 
+			INC SI 
+			cmp SI,34;50;ax; 
+			JNE REPETIR
+			ADD DI,2
+			MOV SI,0
+			INC BL 
+			cmp BL,8
+			JNE REPETIR
+			ADD DI,32
+			xor BL,BL 
+			INC bh 
+			cmp bh,10
+			JNE REPETIR  
+			ADD DI,640
+			xor bh,bh 
+		
+		REPETIR:
+		loop BUCLE
+	endm
+
+
+PUSH_VARS MACRO
+
+PUSH_VARS2 BALL_ORIGINAL_X
+PUSH_VARS2 BALL_ORIGINAL_Y 
+
+PUSH_VARS2 BALL_X ; poSIcion x columna
+PUSH_VARS2 BALL_Y ; poSIcion y linea
+PUSH_VARS2 BALL_SIZE
+
+PUSH_VARS2 BALL_VELOCIDADX  ; VELOCIDAD EN X DE LA PELOTA
+PUSH_VARS2 BALL_VELOCIDADY  ; VELOCIDAD EN Y DE LA PELOTA
+
+PUSH_VARS2 PANTALLA_ALTO   
+PUSH_VARS2 PANTALLA_ANCHO  
+PUSH_VARS2 PANTALLA_MARGEN  ; variaBLe para ver las coliciones
+PUSH_VARS2 PADDLE_LEFT_x   
+PUSH_VARS2 PADDLE_LEFT_Y   
+
+PUSH_VARS2 PADDLE_ANCHO    
+PUSH_VARS2 PADDLE_ALTO     
+
+PUSH_VARS2 PADDLE_VEL
+
+
+ENDM 
+
+
+PUSH_VARS2 MACRO VALOR
+    XOR AX, AX
+    MOV AX, 0
+    MOV AX, VALOR
+    PUSH AX
+ENDM
+
+
+
+
+POP_VARS MACRO
+
+POP_VARS2 PADDLE_VEL      
+
+POP_VARS2 PADDLE_ALTO     
+POP_VARS2 PADDLE_ANCHO    
+
+POP_VARS2 PADDLE_LEFT_Y   
+POP_VARS2 PADDLE_LEFT_x   
+
+POP_VARS2 PANTALLA_MARGEN  ; variaBLe para ver las coliciones
+POP_VARS2 PANTALLA_ANCHO  
+POP_VARS2 PANTALLA_ALTO   
+
+POP_VARS2 BALL_VELOCIDADY  ; VELOCIDAD EN Y DE LA PELOTA
+POP_VARS2 BALL_VELOCIDADX  ; VELOCIDAD EN X DE LA PELOTA
+
+
+POP_VARS2 BALL_SIZE
+POP_VARS2 BALL_Y           ; poSIcion y linea
+POP_VARS2 BALL_X           ; poSIcion x columna
+POP_VARS2 BALL_ORIGINAL_Y 
+POP_VARS2 BALL_ORIGINAL_X 
+MOV AUX_TIEMPO, 0      
+
+ENDM   
+
+
+POP_VARS2 MACRO VARIABLE 
+    MOV AX, 0
+    POP AX
+    MOV VARIABLE, AX
+ENDM

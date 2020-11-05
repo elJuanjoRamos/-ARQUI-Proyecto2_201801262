@@ -14,13 +14,42 @@ LOCAL IGUAL, DIFERENTE
     repe cmpsb  ;compara las dos cadenas
     je IGUAL ;Si fueron iguales
     jne DIFERENTE
-        print errorlogin
-        jmp ENDGAME
     IGUAL:
         COMPARARPASS pass        
     DIFERENTE:
-
+        COMPARARUSERENLISTA user        
 ENDM
+
+
+
+COMPARARUSERENLISTA MACRO user
+LOCAL INICIO, FIN, ERROR, COMPARAR
+    ;MOV DI, 0
+    ;;MOV SI, 0
+   
+   ;HOLA
+   ;LOLA
+;clear usuariotemp
+INICIO: 
+    
+ ;   MOV AL, listausuarios[SI]
+  ;  CMP AL, '$'
+  ;  CMP ERROR
+  ;  CMP AL, ':'
+  ;  JE COMPARAR
+  ;  MOV usuariotemp[DI], AL
+  ;  INC SI
+  ;  INC DI
+
+COMPARAR:
+    
+
+ERROR:
+    print errorlogin
+    JMP INGRESAR
+ENDM
+
+
 
 
 COMPARARPASS MACRO password
@@ -105,51 +134,42 @@ ENDM
 
 
 INSERTARUSER MACRO user, password
-LOCAL INICIO, INSERTUSERNAME, INSERTPASSWORD1, INSERTPASSWORD, TERMINAR
-print user
-print salto
-print password
-print salto
-    push CX
-	push AX
-	push SI
-	push DI
-	mov SI, 0
-    MOV DI, 0
+LOCAL INICIO, INSERTUSERNAME, INSERTDOSPUNTOS, INSERTPASSWORD, TERMINAR
+MOV DI, 0
+MOV SI, 0
 INICIO:
-	CMP listausuarios[SI], '$'
+    CMP listausuarios[SI], '$'
 	JE INSERTUSERNAME
 	INC SI
 	JMP INICIO
-
 INSERTUSERNAME:
-	MOV AL, user[DI]
-    CMP AL, '$'
-	JE INSERTPASSWORD1
-	MOV listausuarios[SI], AL
-	INC SI
-	INC DI
-	JMP INSERTUSERNAME
+    CMP user[DI], '$'
+    JE INSERTDOSPUNTOS
+    MOV AL, user[DI]
+    MOV listausuarios[SI], AL
+    INC SI
+    INC DI
+    JMP INSERTUSERNAME
 
-INSERTPASSWORD1:
-    MOV listausuarios[SI], ':'
+INSERTDOSPUNTOS:
+    MOV AL, ':'
+    MOV listausuarios[SI], AL
     INC SI
     MOV DI, 0
+    JMP INSERTPASSWORD
 INSERTPASSWORD:
-	CMP password[DI], '$'
-	JE TERMINAR
-	MOV AL, password[DI]
-	MOV listausuarios[SI], AL
-	INC SI
-	INC DI
-	JMP INSERTPASSWORD
+    MOV AL, password[DI]
+    CMP AL, '$'    
+    JE TERMINAR
+    MOV listausuarios[SI], AL
+    INC SI
+    INC DI
+    JMP INSERTPASSWORD
 
 TERMINAR:
-MOV listausuarios[SI], ','
-;POP DI
-;POP SI
-;POP AX
-;POP CX
-print listausuarios
-print salto
+    MOV listausuarios[SI], ';'
+    print salto
+    print listausuarios
+    print salto
+    JMP MENUPRINCIPAL
 ENDM
