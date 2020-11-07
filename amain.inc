@@ -102,6 +102,8 @@ msmError7   db 0ah,0dh,'Password no es numerica','$'
 
 msgOpenFile db 0ah,0dh, 'Ingrese el nombre de archivo: ', 32, '$'
 
+mensaje   db 0ah,0dh,'USERS IGUALES','$'
+mensaje1   db 0ah,0dh,'estoy aqui','$'
 
 
 ;======================= SEGMENTO CODIGO ==================
@@ -125,6 +127,11 @@ INGRESAR:
     print encablogin
     print ingreseuser
     clear usuario
+
+    print salto
+    print listausuarios
+    print salto
+    
     getUser usuario
     clear passw
     print ingresepass
@@ -170,9 +177,9 @@ USERLOGUEADO:
     getChar
 
     cmp al,'1' 
-    je TOPPUNTOS
+    ;je TOPPUNTOS
     cmp al,'2'
-    je TOPTIEMPOS
+    ;je TOPTIEMPOS
     cmp al,'3'
     je MENUPRINCIPAL
 
@@ -180,27 +187,6 @@ JMP USERLOGUEADO
 
 
 
-TOPPUNTOS:
-
-     
-    ;print salto1
-    ;print testt
-    ;print bordes
-    ;print encabtopt
-    ;clear filepath
-    ;print msgOpenFile
-    ;getRuta filepath
-    ;openFile filepath, handlefile
-    ;readFile SIZEOF buffread,buffread,handlefile
-    ;ordenar buffread
-    
-    
-    
-    ;print buffread
-    ;bubble buffread
-JMP TOPPUNTOS
-    
-TOPTIEMPOS:
 
 
 
@@ -254,7 +240,6 @@ NUEVO_JUEGO:
         MOV AH, 01h
         INT 16h
         JZ INICIO_JUEGO ; SI ZF = 1, entonces JZ-> jump a la tag
-        
         ; SI SE PRECIONO VERIFICAR QUE TECLA FUE; AL = ASCII code
         MOV AH, 00h 
         INT 16h    
@@ -333,83 +318,98 @@ RESET_POSICION_PELOTA endp
 ;===== PROCEDIMIENTO PARA MOVER PELOTA
 MOVERBALL proc near
     
-    MOV AX, BALL_VELOCIDADX 
-    ADD BALL_X, AX  ; MOVER PELOTA HORIZONTAL
 
 
-    ; COLICIONES
+    BLOQUES:        
+        ; COLICION CON BLOQUES
+        MOV AH, 0Dh	
+        MOV CX, BALL_X 
+        MOV DX, BALL_Y
+        INT 10H
+        CMP AL, 5
+        JE NEG_VELOCIDAD_Y
+        JNE NORMAL
+
+
+    NORMAL:
+            MOV AX, BALL_VELOCIDADX 
+            ADD BALL_X, AX  ; MOVER PELOTA HORIZONTAL
+
+
+            ; COLICIONES
+            
+            
+            ; COLICION EN LOS MARGENES
+                                            
+            ; MARGEN IZQUIERDO
+            MOV AX, PANTALLA_MARGEN         ; BALL_X < 0 (Y-> colicion IZQUIERDA)
+            CMP BALL_X, AX
+            JL NEG_VELOCIDAD_X                    ;
+
+            ; MARGEN DERECHO
+            MOV AX, PANTALLA_ANCHO          ; BALL_x > BORDE DE LA PANTALLA =  COLICION DERECHA
+            SUB AX, BALL_SIZE
+            SUB AX, PANTALLA_MARGEN
+            CMP BALL_X, AX
+            JG NEG_VELOCIDAD_X
+
+
+            ; COLICION CON LOS MARGEN SUPERIOR E INFERIOR
+
+
+            MOV AX, BALL_VELOCIDADY        
+            ADD BALL_Y, AX  ; MOVER PELOTA VERTICAL
+
+            ; MARGEN SUPERIOR
+            MOV AX, PANTALLA_MARGEN
+            CMP BALL_Y, AX
+            JL COLICION_ARRIBA
+                                ;
+            ; MARGEN INFERIOR
+            MOV AX, PANTALLA_ALTO
+            SUB AX, BALL_SIZE
+            SUB AX, PANTALLA_MARGEN
+            CMP BALL_Y, AX
+            JG RESET_POSICION
+
+
+            ; VERIFICAR SI COLICIONA
+            ; ball_Y + BALL SIZE > PADDLE_LEFT_Y && BALL_Y < PADDLE_LEFT_Y + PADDLE_ALTO && BALL_x + BALL SIZE  > PADDLE_LEFT_X && BALL_X < PADDLE RIGT X + PADDLE_ANCHO
+
+
+            ; COLICION CON BARRA
+            MOV AX, BALL_X
+            ADD AX, BALL_SIZE
+            CMP AX, PADDLE_LEFT_x
+            JNG CHECK_COLISION
+
+            MOV AX, PADDLE_LEFT_X
+            ADD AX, PADDLE_ALTO
+            CMP BALL_X, AX
+            JNL CHECK_COLISION
+
+            MOV AX, BALL_Y
+            ADD AX, BALL_SIZE
+            CMP AX, PADDLE_LEFT_Y
+            JNG CHECK_COLISION
+
+
+            MOV AX, PADDLE_LEFT_Y
+            ADD AX, PADDLE_ANCHO
+            CMP BALL_Y, AX 
+            JNL CHECK_COLISION 
+
+
+            NEG BALL_VELOCIDADY
+            RET
+
+
     
-    
-    ; COLICION EN LOS MARGENES
-                                    
-    ; MARGEN IZQUIERDO
-    MOV AX, PANTALLA_MARGEN         ; BALL_X < 0 (Y-> colicion IZQUIERDA)
-    CMP BALL_X, AX
-    JL NEG_VELOCIDAD_X                    ;
-
-    ; MARGEN DERECHO
-    MOV AX, PANTALLA_ANCHO          ; BALL_x > BORDE DE LA PANTALLA =  COLICION DERECHA
-    SUB AX, BALL_SIZE
-    SUB AX, PANTALLA_MARGEN
-    CMP BALL_X, AX
-    JG NEG_VELOCIDAD_X
-
-
-    ; COLICION CON LOS MARGEN SUPERIOR E INFERIOR
-
-
-    MOV AX, BALL_VELOCIDADY        
-    ADD BALL_Y, AX  ; MOVER PELOTA VERTICAL
-
-    ; MARGEN SUPERIOR
-    MOV AX, PANTALLA_MARGEN
-    CMP BALL_Y, AX
-    JL COLICION_ARRIBA
-                        ;
-    ; MARGEN INFERIOR
-    MOV AX, PANTALLA_ALTO
-    SUB AX, BALL_SIZE
-    SUB AX, PANTALLA_MARGEN
-    CMP BALL_Y, AX
-    JG RESET_POSICION
-
-
-    ; VERIFICAR SI COLICIONA
-    ; ball_Y + BALL SIZE > PADDLE_LEFT_Y && BALL_Y < PADDLE_LEFT_Y + PADDLE_ALTO && BALL_x + BALL SIZE  > PADDLE_LEFT_X && BALL_X < PADDLE RIGT X + PADDLE_ANCHO
-
-
-    ; COLICION CON BARRA
-    MOV AX, BALL_X
-    ADD AX, BALL_SIZE
-    CMP AX, PADDLE_LEFT_x
-    JNG CHECK_COLISION
-
-    MOV AX, PADDLE_LEFT_X
-    ADD AX, PADDLE_ALTO
-    CMP BALL_X, AX
-    JNL CHECK_COLISION
-
-    MOV AX, BALL_Y
-    ADD AX, BALL_SIZE
-    CMP AX, PADDLE_LEFT_Y
-    JNG CHECK_COLISION
-
-
-    MOV AX, PADDLE_LEFT_Y
-    ADD AX, PADDLE_ANCHO
-    CMP BALL_Y, AX 
-    JNL CHECK_COLISION 
-
-
-    NEG BALL_VELOCIDADY
-    RET
-
-
-    ; COLICION CON BLOQUES
-
-
-
-
+    NEG_VELOCIDAD_Y:
+        DELETE_BLOCK BALL_Y
+        NEG BALL_VELOCIDADY
+        JMP NORMAL
+        
     CHECK_COLISION:
         ENTER_VIDEOMODE
         ;NEG BALL_VELOCIDADY
@@ -419,15 +419,20 @@ MOVERBALL proc near
     NEG_VELOCIDAD_X:
         NEG BALL_VELOCIDADX
         RET
+    
+   
+    
 
     RESET_POSICION:
         CALL RESET_POSICION_PELOTA
         RET
+
     COLICION_ARRIBA:
         ;NEG BALL_VELOCIDADX
         NEG BALL_VELOCIDADY
         RET
 
+        
 MOVERBALL endp
 
 MOVEPADDLES PROC near

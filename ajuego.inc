@@ -21,31 +21,79 @@ DRAW_BLOCK macro
 		MOV BX, 0 
 		MOV DI, 6736 ;pixel de inicio = esquina superior izquierda
 		MOV SI, 0
-		MOV DX, 3 ; color 
-		MOV CX, 3FC0h;1388h;bx ;
+		MOV DX, 5 ; color 
+		MOV CX, 3FC0h
 	
 		BUCLE:
 			MOV [DI],dx 
 			INC DI 
 			INC SI 
-			cmp SI,34;50;ax; 
+			CMP SI,34 
 			JNE REPETIR
 			ADD DI,2
 			MOV SI,0
 			INC BL 
-			cmp BL,8
+			CMP BL,8
 			JNE REPETIR
 			ADD DI,32
-			xor BL,BL 
-			INC bh 
-			cmp bh,10
+			MOV BL, 0 
+			INC BH 
+			CMP BH,10
 			JNE REPETIR  
 			ADD DI,640
-			xor bh,bh 
+			MOV BH, 0 
 		
 		REPETIR:
 		loop BUCLE
 	endm
+
+
+
+
+DELETE_BLOCK macro pixel 
+	local BUCLE,REPETIR, fin, NUEVO
+		MOV BX, 0 
+		MOV DI, 6736 ;pixel de inicio = esquina superior izquierda
+		MOV SI, 0
+		MOV DX, 5 ; color 
+		MOV CX, 3FC0h
+	
+		BUCLE:
+			CMP DI, pixel
+			JE PINTAR_NEGRO
+			JNE PINTAR_OTRO
+
+		NUEVO:
+			MOV [DI],dx 
+			INC DI 
+			INC SI 
+			CMP SI,34 
+			JNE REPETIR
+			ADD DI,2
+			MOV SI,0
+			INC BL 
+			CMP BL,8
+			JNE REPETIR
+			ADD DI,32
+			MOV BL, 0 
+			INC BH 
+			CMP BH,10
+			JNE REPETIR  
+			ADD DI,640
+			MOV BH, 0 
+		
+		PINTAR_NEGRO:
+			MOV DX, 2
+			JMP NUEVO
+		PINTAR_OTRO:
+			MOV DX, 5
+			JMP NUEVO
+
+		REPETIR:
+		loop BUCLE
+	endm
+
+
 
 
 PUSH_VARS MACRO

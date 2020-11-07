@@ -4,6 +4,7 @@
 COMPARARUSER MACRO user, pass
 LOCAL IGUAL, DIFERENTE
    
+    
     xor CX, CX
     mov cx,7   ;Determinamos la cantidad de datos a leer/comparar
     mov AX,DS  ;mueve el segmento datos a AX
@@ -17,36 +18,100 @@ LOCAL IGUAL, DIFERENTE
     IGUAL:
         COMPARARPASS pass        
     DIFERENTE:
-        COMPARARUSERENLISTA user        
+        COMPARARUSERENLISTA user, pass        
 ENDM
 
 
 
-COMPARARUSERENLISTA MACRO user
-LOCAL INICIO, FIN, ERROR, COMPARAR
-    ;MOV DI, 0
-    ;;MOV SI, 0
-   
+COMPARARUSERENLISTA MACRO user, pass
+LOCAL INICIO, FIN, ERROR, GETUSER, VERIFICARUSER, IGUAL, IGUAL2, DIFERENTE, COMPARARPASS, GETPASS
+    MOV DI, 0
+    MOV SI, 0
    ;HOLA
    ;LOLA
-;clear usuariotemp
+    clear usuariotemp
 INICIO: 
     
- ;   MOV AL, listausuarios[SI]
-  ;  CMP AL, '$'
-  ;  CMP ERROR
-  ;  CMP AL, ':'
-  ;  JE COMPARAR
-  ;  MOV usuariotemp[DI], AL
-  ;  INC SI
-  ;  INC DI
+    MOV AL, listausuarios[SI]
+    CMP AL, '$'
+    JE ERROR
+    CMP AL, ';'
+    JE GETUSER
+    INC SI
+    JMP INICIO
 
-COMPARAR:
-    
+GETUSER:
+    INC SI
+    MOV AL, listausuarios[SI]
+    CMP AL, ':'    
+    JE VERIFICARUSER
+    MOV usuariotemp[DI], AL
+    INC DI
+    JMP GETUSER
+
+
+
+VERIFICARUSER:
+    INC  SI
+    PUSH SI
+   
+    xor CX, CX
+    mov cx,7   ;Determinamos la cantidad de datos a leer/comparar
+    mov AX,DS  ;mueve el segmento datos a AX
+    mov ES,AX  ;Mueve los datos al segmento extra
+    lea si, user                ; Reset pointer to arr1
+    lea di, usuariotemp
+
+    repe cmpsb  ;compara las dos cadenas
+    je IGUAL ;Si fueron iguales
+    jne DIFERENTE
+    IGUAL:
+        clear usuariotemp
+        MOV DI, 0
+        POP SI 
+        JMP GETPASS        
+    DIFERENTE:
+        MOV DI, 0
+        POP SI 
+        clear usuariotemp
+        JMP INICIO
+
+GETPASS:
+    MOV AL, listausuarios[SI]
+    CMP AL, ';'
+    JE COMPARARPASS
+    MOV usuariotemp[DI], AL
+    INC SI
+    INC DI
+    JMP GETPASS
+
+
+COMPARARPASS:
+     
+    xor CX, CX
+    mov cx,4   ;Determinamos la cantidad de datos a leer/comparar
+    mov AX,DS  ;mueve el segmento datos a AX
+    mov ES,AX  ;Mueve los datos al segmento extra
+    lea si, pass                ; Reset pointer to arr1
+    lea di, usuariotemp
+
+    repe cmpsb  ;compara las dos cadenas
+    je IGUAL2 ;Si fueron iguales
+    jne ERROR
+    IGUAL2:
+        print salto
+        print usuarionoexiste
+        print salto
+        getChar
+        JMP NUEVO_JUEGO
 
 ERROR:
     print errorlogin
     JMP INGRESAR
+
+FIN:
+    
+
 ENDM
 
 
@@ -135,6 +200,7 @@ ENDM
 
 INSERTARUSER MACRO user, password
 LOCAL INICIO, INSERTUSERNAME, INSERTDOSPUNTOS, INSERTPASSWORD, TERMINAR
+MOV listausuarios[0], ';'	
 MOV DI, 0
 MOV SI, 0
 INICIO:

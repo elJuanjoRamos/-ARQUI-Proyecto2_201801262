@@ -290,5 +290,38 @@ endm
 
 
 
+Sound macro hz
+	mov al, 86h
+	out 43h, al
+	mov ax, (1193180 / hz) ;numero de hz
+	out 42h, al
+	mov al, ah
+	out 42h, al 
+	in al, 61h
+	or al, 00000011b
+	out 61h, al
+	delay 1000 ;mando a ejecutar el delay para que se escuche el sonido por varios segundos
+	 ; apagar la bocina
+	in al, 61h
+	and al, 11111100b
+	out 61h, al
+endm
 
 
+Delay macro const
+LOCAL D1, D2, FIN
+PUSH SI
+PUSH DI
+MOV SI, const
+D1:
+	DEC SI
+	JZ FIN
+	MOV DI, const
+D2:
+	DEC DI
+	JNZ D2
+	JMP D1
+FIN:
+	POP DI
+	POP SI
+endm
