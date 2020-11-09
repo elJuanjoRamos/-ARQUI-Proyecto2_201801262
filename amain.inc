@@ -1,8 +1,6 @@
 ;======================= SECCION MACROS
 include amacros.inc
 include alogin.inc
-include archivos.inc
-include aordenar.inc
 include ajuego.inc
 ;=======================SECCION DE EJECUTABLE
 .model small
@@ -18,8 +16,10 @@ encab           db 'UNIVERSIDAD DE SAN CARLOS DE GUATEMALA', 10,13,  'FACULTAD D
 encablogin      db 10,13,'==================    LOGIN     ===================', 10,13,'$'  
 encabregist     db 10,13,'==================   REGISTRO   ===================', 10,13,'$'  
 
-AUX_TIEMPO      db 0    ; auxiliar para verificar si cambia el tiempo 
 
+;============= VARIABLES JUEGO
+
+AUX_TIEMPO      db 0    ; auxiliar para verificar si cambia el tiempo 
 BALL_ORIGINAL_X dw 0A0h
 BALL_ORIGINAL_Y dw 64h
 BALL_X          dw 0A0h ; posicion x columna
@@ -30,22 +30,25 @@ BALL_VELOCIDADY dw 02h  ; VELOCIDAD EN Y DE LA PELOTA
 
 PANTALLA_ALTO   dw  0C8h
 PANTALLA_ANCHO  dw  130h
-PANTALLA_MARGEN dw 6    ; variable para ver las coliciones
+PANTALLA_MARGEN dw  12    ; variable para ver las coliciones
 
 PADDLE_LEFT_x   dw 08Ch
 PADDLE_LEFT_Y   dw 0A0h
-
-
-
 
 PADDLE_ANCHO    dw 05h
 PADDLE_ALTO     dw 32h
 
 PADDLE_VEL      dw 0Fh
 
+CONTADOR_PUNTOS  db  0
+CONTADOR_SEGUNDO db  0
+CONTADOR_MINUTO  db  0
+CONTADOR_HORA    db  0
 
 
+CONTADOR_LOOPS  db  0
 
+;=============== END VARIABLES JUEGO
 
 
 
@@ -54,7 +57,10 @@ usuario         db 8 dup('$') ; username
 usuariotemp     db 8 dup('$') ; username
 passw           db 5 dup('$') ; username
 listausuarios   db 100 dup('$'), '$'
-
+puntaje         db 2 dup('0')
+timerseg        db 2 dup('0') 
+timermin        db 2 dup('0') 
+timerhor        db 2 dup('0') 
 
 ;======================
 
@@ -92,10 +98,6 @@ buffread    db 500 dup('$') ; buffer lectura
 buffwrite   db 500 dup('$') ; buffer escritura
 handlefile  dw ?
 
-msmError1   db 0ah,0dh,'Error al abrir archivo','$'
-msmError2   db 0ah,0dh,'Error al leer archivo','$'
-msmError3   db 0ah,0dh,'Error al crear archivo','$'
-msmError4   db 0ah,0dh,'Error al Escribir archivo','$'
 msmError5   db 0ah,0dh,'Nombre de usuario demaciado largo','$'
 msmError6   db 0ah,0dh,'Password de usuario demaciado largo','$'
 msmError7   db 0ah,0dh,'Password no es numerica','$'
@@ -127,11 +129,6 @@ INGRESAR:
     print encablogin
     print ingreseuser
     clear usuario
-
-    print salto
-    print listausuarios
-    print salto
-    
     getUser usuario
     clear passw
     print ingresepass
@@ -220,7 +217,15 @@ main endp
 
 ;======================= SECCION JUEGO =============================
 
+PRUEBA:
+    ENTER_VIDEOMODE
+    DRAW_USER
+        DRAW_BORDE
+        DRAW_NIVEL
+        DRAW_PUNTOS
+    DRAW_TIMER
 
+JMP FIN
 
 
 
@@ -229,6 +234,11 @@ NUEVO_JUEGO:
     
     INIT:
         ENTER_VIDEOMODE
+        DRAW_USER
+        DRAW_BORDE
+        DRAW_TIMER
+        DRAW_NIVEL
+        DRAW_PUNTOS
         DRAW_BLOCK
         CALL PINTBALL
         CALL DRAWPADDLES
@@ -246,6 +256,11 @@ NUEVO_JUEGO:
         ;SI ES 'SPACE' SALTA AL JUEGO, SI NO REGRESA
         CMP AL, 32 ; -> 'SPACE'
         JE VERIFICAR_TIEMPO
+
+        CMP AL, 9 ; -> 'TAB'
+        JE SALIR
+
+
         JNE INICIO_JUEGO
 
 
@@ -262,8 +277,13 @@ NUEVO_JUEGO:
         MOV AUX_TIEMPO, DL ; ACTUALIZAR TIEMPO
         
         ;ENTER_VIDEOMODE
-        ;CALL videomode ; limpiar la pantalla
+        ;CALL VIDEO_MODE ; limpiar la pantalla
         CALL WRITE_TIME
+        DRAW_USER
+        DRAW_BORDE
+        DRAW_TIMER
+        DRAW_NIVEL
+        DRAW_PUNTOS
         DRAW_BLOCK
         
 
@@ -273,6 +293,20 @@ NUEVO_JUEGO:
         CALL DRAWPADDLES
         JMP VERIFICAR_TIEMPO
 
+
+
+
+
+
+    SALIR:
+        ENTER_VIDEOMODE
+        DRAW_BORDE
+        DRAW_MENSAJE
+        getChar
+        ;regresara a modo texto
+        mov ax,0003h
+        int 10h
+        call main       
     JMP FIN
 
 
@@ -406,7 +440,7 @@ MOVERBALL proc near
 
     
     NEG_VELOCIDAD_Y:
-        DELETE_BLOCK BALL_Y
+        AUMENTAR_PUNTOS
         NEG BALL_VELOCIDADY
         JMP NORMAL
         
@@ -464,6 +498,8 @@ MOVEPADDLES PROC near
     CMP AL, 1Bh ; -> 'ESC'
     JE INIT
 
+
+
     JMP CHECK_MOVIMIENTO
 
     MOVE_IZQUIERDA:
@@ -498,6 +534,13 @@ MOVEPADDLES PROC near
 
     DRAW_NEW_POSITION:
         ENTER_VIDEOMODE
+        DRAW_USER
+        DRAW_BORDE
+        DRAW_TIMER
+        DRAW_NIVEL
+        DRAW_PUNTOS
+        DRAW_BLOCK
+
         DRAW_BLOCK
         JMP CHECK_MOVIMIENTO
 
@@ -535,7 +578,7 @@ PINTBALL proc near
 PINTBALL endp
 
 
-videomode proc near
+VIDEO_MODE proc near
     
     MOV AH, 00h ; video mode
     MOV AL, 13h
@@ -547,7 +590,7 @@ videomode proc near
     MOV BL, 00h ; color para el background
     INT 10H     ; ejecutar configuracion
     ret 
-videomode endp
+VIDEO_MODE endp
 
 WRITE_TIME proc near
     MOV AH, 0Ah
@@ -556,6 +599,10 @@ WRITE_TIME proc near
     MOV CX, 2
     RET
 WRITE_TIME endp
+
+
+
+
 
 
 

@@ -208,6 +208,9 @@ ConvertirString macro buffer
 endm
 
 
+
+
+
 CovertirAscii macro numero
 	LOCAL INICIO,FIN
 	xor al,al
