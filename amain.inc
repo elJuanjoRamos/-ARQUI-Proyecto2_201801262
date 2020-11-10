@@ -48,6 +48,7 @@ CONTADOR_HORA    db  0
 
 
 CONTADOR_LOOPS  db  0
+CONTADOR_ITER   dw  0
 
 ;=============== END VARIABLES JUEGO
 
@@ -62,21 +63,10 @@ puntaje         db 2 dup('0')
 timerseg        db 2 dup('0') 
 timermin        db 2 dup('0') 
 timerhor        db 2 dup('0') 
-numeros         db 25,100,60,10,2,35,14,96,54,6,  '$'
+numeros         db 1,25,60,10,100,35,14,96,54,6
 num             db 100 dup('$')
 datos           db 20 DUP ('$')
 
-
-arr dw 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 5
-
-i   dw  ? 
-j   dw  ?
-p   dw  0                           ;START OF THE ARRAY, EQUALS TO 0.
-r   dw  14                          ;END OF THE ARRAY, EQUALS TO A.LENGTH - 1.
-q   dw  ?
-x   dw  ?
-
-;======================
 
 
 bordes          db 10,13,'---------------------------------------------------',10,13,'$'
@@ -87,7 +77,7 @@ encabtopP       db 10,13,'                   TOP 10 PUNTOS                   ', 
 
 
 ;========LOGIN
-admin           db 'adminap', '$'
+admin           db 'adminAP', '$'
 pass            db '1234', '$'
 
 
@@ -127,7 +117,7 @@ main proc
     print encab
     getChar
     cmp al,'1' 
-    je BUBBLE_ASC
+    je INGRESAR
     cmp al,'2'
     je REGISTRAR
     cmp al,'3'
@@ -187,11 +177,15 @@ USERLOGUEADO:
     cmp al,'1' 
     je TOPPUNTOS
     cmp al,'2'
-    ;je TOPTIEMPOS
+    je TOPTIEMPOS
     cmp al,'3'
     je MENUPRINCIPAL
 
 JMP USERLOGUEADO
+
+TOPTIEMPOS:
+
+
 
 
 TOPPUNTOS:
@@ -203,7 +197,7 @@ TOPPUNTOS:
     cmp al,'1' 
     je BUBBLESORT_ORDEN
     cmp al,'2'
-    ;je TOPTIEMPOS
+    je QUICKSORT_ORDEN
     cmp al,'3'
     je MENUPRINCIPAL
 
@@ -222,20 +216,32 @@ BUBBLESORT_ORDEN:
 
 
 BUBBLE_ASC:
-    ;print encavel
-    ;getChar
+    
     ORDENAR_TOPPUNTOS
     BUBBLE_SORT
-    
-BUBBLE_DES:
-    ;print encavel
-    ;getChar
+    ORDENAR_TOPPUNTOS
+    DRAW_BAR numeros
 
+
+    JMP FIN
+BUBBLE_DES:
     ORDENAR_TOPPUNTOS
     BUBBLE_SORT_DESC
+    ORDENAR_TOPPUNTOS
+    DRAW_BAR numeros
 
+    JMP FIN
 
     
+QUICKSORT_ORDEN:
+    ;ORDENAR_TOPPUNTOS
+    ;call quicksort
+   ;DRAW_BAR numeros
+    
+
+    JMP FIN
+
+
 
 ENDGAME:
     mov ah,4ch

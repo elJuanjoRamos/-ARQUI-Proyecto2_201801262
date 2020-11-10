@@ -7,14 +7,12 @@ ORDENAR_TOPPUNTOS MACRO
 	MOV ds ,ax
 	DRAW_BORDE_BARRA
     POP_NUMERO
-    
 
 ENDM
 PUSH_NUMEROS macro
 	LOCAL INICIO,FIN  
 		;CANT_ELEMENTOS numeros
 		MOV DX,10 
-
 		MOV si,0
 		xor AX,AX 
 		INICIO:
@@ -29,29 +27,26 @@ PUSH_NUMEROS macro
 
 	endm 
 
-
-
 POP_NUMERO macro 
     LOCAL INICIO, FIN
-    MOV si,0
-    MOV AX, 0 
-    POP DX 
+    POP DX  
+    MOV SI, 9
     INICIO:
-        CMP SI,DX 
-        JE FIN 
-        POP AX 
-        MOV numeros[si],AL 
-        INC SI 
-        JMP INICIO 
+        POP AX
+        MOV numeros[SI], AL
+        DEC SI
+        CMP SI, -1
+        JE FIN
+        JMP INICIO
     FIN:
 ENDM
 
-
+;================ORDENAMIENTO BURBUJA
 
 BUBBLE_SORT MACRO
 LOCAL FOR_EXT, FOR_INT, CARRY, FIN
 
-   MOV CX,DX ;Cx is counter for FOR_EXT CX=5    
+    MOV CX,DX ;Cx is counter for FOR_EXT CX=5    
     DEC CX     ; CX = 4   
     
  FOR_EXT:  
@@ -64,9 +59,11 @@ LOCAL FOR_EXT, FOR_INT, CARRY, FIN
     JC CARRY        ; if AL > AH => Carry Flag =1 ,THEN jump to carry   
     MOV numeros[SI] , AL  ; else , Do Switching bteween  numeros[SI] and numeros[SI+1]   
     MOV numeros[SI+1] ,AH
-    ;UPDATE_BARRA
-    ;DRAW_BAR numeros
-    ;delay 100000
+    PUSH CX
+    CLEAR_SCREEN
+    DRAW_BAR numeros
+	Sound 7
+    POP CX
  CARRY:   
     INC SI   
     DEC BX
@@ -75,16 +72,15 @@ LOCAL FOR_EXT, FOR_INT, CARRY, FIN
     DEC CX
     CMP CX, 0
     JNE FOR_EXT 
-    ;LOOP FOR_EXT
+    JE  FIN
 FIN:
-    DRAW_BAR numeros
-    ;DRAW_BAR numeros
 ENDM
 
-
+;================= ORDENAMIENTO BURBUJA DESCENDENTE
 
 BUBBLE_SORT_DESC MACRO
 LOCAL FOR_EXT, FOR_INT, CARRY, FIN
+
     MOV CX,DX ;Cx is counter for FOR_EXT CX=5    
     DEC CX     ; CX = 4   
     
@@ -98,7 +94,11 @@ LOCAL FOR_EXT, FOR_INT, CARRY, FIN
     JNC CARRY        ; if AL > AH => Carry Flag =1 ,THEN jump to carry   
     MOV numeros[SI] , AL  ; else , Do Switching bteween  numeros[SI] and numeros[SI+1]   
     MOV numeros[SI+1] ,AH
-    ;DRAW_BAR numeros
+    PUSH CX
+    CLEAR_SCREEN
+    DRAW_BAR numeros
+	Sound 10
+    POP CX
  CARRY:   
     INC SI   
     DEC BX
@@ -107,20 +107,17 @@ LOCAL FOR_EXT, FOR_INT, CARRY, FIN
     DEC CX
     CMP CX, 0
     JNE FOR_EXT 
-    ;LOOP FOR_EXT
+    JE  FIN
 FIN:
-    DRAW_BAR numeros
 ENDM
 
-
-
+;================== QUICKSORT
 
 
 
 DRAW_BAR macro  valor 
 LOCAL INICIO, FIN 
-        ;CLEAR_SCREEN
-		MOV AX,DX 
+        MOV AX,DX 
 		MOV datos[2],dl
 		GET_ANCHO
 		MOV datos[0],AL;datos0 50 
@@ -129,7 +126,6 @@ LOCAL INICIO, FIN
 		
         MOV datos[1],AL; datos1 9
 		MOV SI,0 
-		MOV DI,0 
 		MOV DI,1
 		
         INICIO:
@@ -193,6 +189,9 @@ LOCAL INICIO, FIN
 		MOV AX, 0 
 		MOV AL,numeros[SI-1]
 
+        ;MOV CONTADOR_ITER, di
+        ;LOOP_MENSAJE1 numeros[SI], di, 17h    
+
 		MOV DX, 0 
 		JMP INICIO
 
@@ -200,18 +199,16 @@ LOCAL INICIO, FIN
 		MOV DX,  0
 		POP AX 
 		POP BX 
+        ;Delay 5
 
-        MUL BX
-		Delay BX
-
-	endm 
+endm 
 
 
 
 
 GET_BARRA macro 
-	LOCAL ciclo,rep
-		
+	LOCAL FOR_EXT,ENDF
+
 		add DX,5
 	
 		PUSH AX 
@@ -237,72 +234,35 @@ GET_BARRA macro
 		POP AX 
 		POP DX 
 	
-		
-
-		xor DI,DI
-		xor SI,SI
+		MOV DI,0
+		MOV SI,0
 		MOV DI,DX;7099h; DX; pixel iniciAL esquina superior izquierda
 		MOV DX,cx ; color 
 		MOV cx, BX;1388h;BX ; area de la barra en pixeles 
 		;MOV BX,SI 
  
-		ciclo:
+		FOR_EXT:
 			MOV [DI],DX 
 			INC DI 
 			INC SI 
 			CMP SI,AX;50;AX; 50 ancho de la barra
-			jne rep
+			jne ENDF
 			add DI,320
 			sub DI,AX;50;AX
 			xor SI,SI 
-		rep:
-		loop ciclo
-	endm 
+		ENDF:
+		loop FOR_EXT
 
-GET_ALTURA macro valor
+	endm 
+GET_ALTURA macro numeroo
     MOV CX, 0
-    MOV cl, valor
+    MOV cl, numeroo
     MOV BX,AX 
     MOV AX,170
     mul cx 
     DIv BX 
 ENDM
 
-
-
-UPDATE_BARRA macro
-POP AX 
-POP BX 
-
-PUSH DI 
-PUSH SI 
-PUSH DX 
-
-Sound 15
-
-PUSH DX 
-printChar AL
-POP DX 
-
-CLEAR_SCREEN
-
-
-POP DX 
-PUSH DX 
-PUSH BX 
-PUSH AX 
-DRAW_BAR numeros
-POP DX 
-POP SI 
-POP DI 
-
-
-PUSH BX
-PUSH AX 
-xor AX,AX 
-xor BX,BX 
-xor cx,cx 
-endm
 
 
 
@@ -346,49 +306,42 @@ GET_ANCHO macro
 endm
 
 
-GET_MAYOR macro cadena 
-	local inicio,cambiar,fin 
-		xor dx,dx 
-		mov di,1
-		mov dl,0
-		mov dl,cadena[0]
+GET_MAYOR macro buffer 
+	local INICIO,AVANZAR,FIN 
+		MOV DX, 0 
+		mov dl,buffer[0]
+		MOV DI, 1 
 
-		inicio:
-			cmp di,SIZEOF cadena
-			je fin 
-			cmp cadena[di],'$'
-			je fin 
-			cmp cadena[di],dl
-			jg cambiar
+		INICIO:
+			cmp di,SIZEOF buffer
+			je FIN 
+			cmp buffer[di],'$'
+			je FIN 
+			cmp buffer[di],dl
+			jg AVANZAR
 			inc di 
-			jmp inicio
-		cambiar:
-			mov dl,cadena[di]
+			jmp INICIO
+		AVANZAR:
+			mov dl,buffer[di]
 			inc di 
-			jmp  inicio
-		fin:
+			jmp  INICIO
+		FIN:
 			mov ax,dx
-			;push ax 
-			;ConvertirString num
-			;print saltoLinea
-			;print saltoLinea
-			;print num
-			;pop ax 
-			;calcularAltura cadena[0]
 	endm
 
     
 Sound macro hz
 	mov al, 86h
 	out 43h, al
-	mov ax, (1193180 / hz) ;numero de hz
+	mov ax, (1193180 / 1200) ;numero de hz
 	out 42h, al
 	mov al, ah
 	out 42h, al 
 	in al, 61h
 	or al, 00000011b
 	out 61h, al
-	delay 1000 ;mando a ejecutar el delay para que se escuche el sonido por varios segundos
+
+	delay hz;mando a ejecutar el delay para que se escuche el sonido por varios segundos
 	 ; apagar la bocina
 	in al, 61h
 	and al, 11111100b
@@ -397,34 +350,24 @@ endm
 
 
 Delay macro const
-LOCAL D1, D2, FIN
-PUSH SI
-PUSH DI
-MOV SI, const
-D1:
-	DEC SI
-	JZ FIN
-	MOV DI, const
-D2:
-	DEC DI
-	JNZ D2
-	JMP D1
-FIN:
-	POP DI
-	POP SI
+LOCAL D1, D2, FIN, delay, delay2
+mov bp, const
+mov si, const
+delay2:
+dec bp
+nop
+jnz delay2
+dec si
+cmp si,0    
+jnz delay2
+
 endm
 
 
 
 
 CLEAR_SCREEN MACRO 
-    ;MOV AX,0600H    ;06 TO SCROLL & 00 FOR FULLJ SCREEN
-    ;MOV BH,71H      ;ATTRIBUTE 7 FOR BACKGROUND AND 1 FOR FOREGROUND
-    ;MOV CX,0000H    ;STARTING COORDINATES
-    ;MOV DX,184FH    ;ENDING COORDINATES
-    ;INT 10H        ;FOR VIDEO DISPLAY
-    ;MOV AH,4CH    ;RETURN TO DOS MODE
-    ;INT 21H
+local LOOP_FOR,REPETIR
     ORDENAR_TOPPUNTOS
 ENDM
 
