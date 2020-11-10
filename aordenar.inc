@@ -1,148 +1,511 @@
-ordenar macro buffer
-LOCAL INICIO, GETPUNTO,GETPUNTO1, FIN, ENDF
+ORDENAR_TOPPUNTOS MACRO 
+    PUSH_NUMEROS
+    MOV AH, 00h ; video mode
+    MOV AL, 13h
+    int 10H
+	MOV ax,0A000h
+	MOV ds ,ax
+	DRAW_BORDE_BARRA
+    POP_NUMERO
+    
 
-print buffer
+ENDM
+PUSH_NUMEROS macro
+	LOCAL INICIO,FIN  
+		;CANT_ELEMENTOS numeros
+		MOV DX,10 
 
-PUSH DI
-PUSH AX
-PUSH SI
-MOV DI, 0
-MOV SI, 0
-MOV Bl, 0
-INICIO:
-    MOV AL,buffer[DI] 
-    CMP al, '+'
-    JE GETPUNTO1
-    CMP al, '$'
-    JE ENDF
-    INC DI
-    JMP INICIO
-GETPUNTO1:
-    clear arraypuntos
-    INC DI
-    JMP GETPUNTO    
-GETPUNTO:
-    MOV AL, buffer[DI]
-    CMP AL, '*'
-    JE FIN 
-    MOV arraypuntos[SI], AL
-    INC DI
-    INC SI 
-    JMP GETPUNTO
+		MOV si,0
+		xor AX,AX 
+		INICIO:
+			CMP si,DX
+			JE FIN 
+			MOV AL,numeros[si]
+			push AX
+			INC si 
+			JMP INICIO
+		FIN:
+		push DX 
+
+	endm 
+
+
+
+POP_NUMERO macro 
+    LOCAL INICIO, FIN
+    MOV si,0
+    MOV AX, 0 
+    POP DX 
+    INICIO:
+        CMP SI,DX 
+        JE FIN 
+        POP AX 
+        MOV numeros[si],AL 
+        INC SI 
+        JMP INICIO 
+    FIN:
+ENDM
+
+
+
+BUBBLE_SORT MACRO
+LOCAL FOR_EXT, FOR_INT, CARRY, FIN
+
+   MOV CX,DX ;Cx is counter for FOR_EXT CX=5    
+    DEC CX     ; CX = 4   
+    
+ FOR_EXT:  
+    MOV SI,0         ;    SI is the index of array N   
+    MOV BX,CX  ; Dx is counter for FOR_INT   
+ FOR_INT:    
+    MOV AH,numeros[SI]    ; assign the number numeros[SI] into reg.AH  
+    MOV AL,numeros[SI+1]  ; assign the next number numeros[SI+1] into reg.AL   
+    CMP AH,AL       ; Compare between numeros[SI] and numeros[SI+1] <BR> 
+    JC CARRY        ; if AL > AH => Carry Flag =1 ,THEN jump to carry   
+    MOV numeros[SI] , AL  ; else , Do Switching bteween  numeros[SI] and numeros[SI+1]   
+    MOV numeros[SI+1] ,AH
+    ;UPDATE_BARRA
+    ;DRAW_BAR numeros
+    ;delay 100000
+ CARRY:   
+    INC SI   
+    DEC BX
+    CMP BX, 0   
+    JNE FOR_INT   
+    DEC CX
+    CMP CX, 0
+    JNE FOR_EXT 
+    ;LOOP FOR_EXT
 FIN:
+    DRAW_BAR numeros
+    ;DRAW_BAR numeros
+ENDM
 
-CovertirAscii arraypuntos
+
+
+BUBBLE_SORT_DESC MACRO
+LOCAL FOR_EXT, FOR_INT, CARRY, FIN
+    MOV CX,DX ;Cx is counter for FOR_EXT CX=5    
+    DEC CX     ; CX = 4   
+    
+ FOR_EXT:  
+    MOV SI,0         ;    SI is the index of array N   
+    MOV BX,CX  ; Dx is counter for FOR_INT   
+ FOR_INT:    
+    MOV AH,numeros[SI]    ; assign the number numeros[SI] into reg.AH  
+    MOV AL,numeros[SI+1]  ; assign the next number numeros[SI+1] into reg.AL   
+    CMP AH,AL       ; Compare between numeros[SI] and numeros[SI+1] <BR> 
+    JNC CARRY        ; if AL > AH => Carry Flag =1 ,THEN jump to carry   
+    MOV numeros[SI] , AL  ; else , Do Switching bteween  numeros[SI] and numeros[SI+1]   
+    MOV numeros[SI+1] ,AH
+    ;DRAW_BAR numeros
+ CARRY:   
+    INC SI   
+    DEC BX
+    CMP BX, 0   
+    JNE FOR_INT   
+    DEC CX
+    CMP CX, 0
+    JNE FOR_EXT 
+    ;LOOP FOR_EXT
+FIN:
+    DRAW_BAR numeros
+ENDM
+
+
+
+
+
+
+DRAW_BAR macro  valor 
+LOCAL INICIO, FIN 
+        ;CLEAR_SCREEN
+		MOV AX,DX 
+		MOV datos[2],dl
+		GET_ANCHO
+		MOV datos[0],AL;datos0 50 
+		MOV AX,0 
+		GET_MAYOR numeros
+		
+        MOV datos[1],AL; datos1 9
+		MOV SI,0 
+		MOV DI,0 
+		MOV DI,1
+		
+        INICIO:
+ 			MOV dl,datos[2]
+ 			CMP SI,DX 
+			jge FIN
+			CMP numeros[SI],'$'
+			JE FIN
+			MOV dl,numeros[SI]
+			MOV AX,0 
+			MOV AL, datos[1]
+
+			MOV CX, 0 
+			MOV CL, DL
+		    MOV AX, 0
+
+		MOV AL,datos[1]
+			GET_ALTURA numeros[SI]
+
+			;MOV AX,100
+			MOV cx,AX ;cx es ALtura barra 
+			xor AX,AX 
+			MOV AL,datos[0]
+			MOV BX,cx 
+			MOV DX,AX 
+			PUSH AX 
+			MOV AX,DI 
+			mul DX 
+			MOV DX,AX 
+			POP AX 
+
+
+		    ;BX;ALtura
+		    ;AX; ancho 
+		    ;DX; poSIcion x 
+		    ;CX; color
+			GET_COLOR numeros[SI]
+			INC DI 
+			INC SI 
+			INC DI
+			PUSH DX 		
+			PUSH SI 
+			PUSH DI  
+
+			GET_BARRA 
+
+			POP DI 
+			POP SI 
+			POP DX 
+
+            MOV AX,DX
+            MOV DX,8
+            DIv dl
+            MOV DX,AX 
+
+            MOV ah,02h
+            MOV bh,0h
+            MOV dh,23
+            int 10h
+
+		MOV AX, 0 
+		MOV AL,numeros[SI-1]
+
+		MOV DX, 0 
+		JMP INICIO
+
+		FIN:
+		MOV DX,  0
+		POP AX 
+		POP BX 
+
+        MUL BX
+		Delay BX
+
+	endm 
+
+
+
+
+GET_BARRA macro 
+	LOCAL ciclo,rep
+		
+		add DX,5
+	
+		PUSH AX 
+		PUSH BX
+		PUSH DX 
+
+		MOV AX,180
+		sub AX,BX
+
+		MOV BX,320
+		mul BX 
+
+		POP DX 
+		add DX,AX
+
+		POP BX
+		POP AX
+		PUSH DX 
+		PUSH AX 
+
+		mul BX
+		MOV BX,AX
+		POP AX 
+		POP DX 
+	
+		
+
+		xor DI,DI
+		xor SI,SI
+		MOV DI,DX;7099h; DX; pixel iniciAL esquina superior izquierda
+		MOV DX,cx ; color 
+		MOV cx, BX;1388h;BX ; area de la barra en pixeles 
+		;MOV BX,SI 
+ 
+		ciclo:
+			MOV [DI],DX 
+			INC DI 
+			INC SI 
+			CMP SI,AX;50;AX; 50 ancho de la barra
+			jne rep
+			add DI,320
+			sub DI,AX;50;AX
+			xor SI,SI 
+		rep:
+		loop ciclo
+	endm 
+
+GET_ALTURA macro valor
+    MOV CX, 0
+    MOV cl, valor
+    MOV BX,AX 
+    MOV AX,170
+    mul cx 
+    DIv BX 
+ENDM
+
+
+
+UPDATE_BARRA macro
+POP AX 
+POP BX 
+
+PUSH DI 
+PUSH SI 
+PUSH DX 
+
+Sound 15
+
+PUSH DX 
 printChar AL
-MOV arraynumeros[0], Al
-INC BX
-INC DI 
+POP DX 
 
-JMP INICIO
+CLEAR_SCREEN
 
-ENDF:
-print arraypuntos
-;call ord 
-POP SI
-POP AX
-POP DI
+
+POP DX 
+PUSH DX 
+PUSH BX 
+PUSH AX 
+DRAW_BAR numeros
+POP DX 
+POP SI 
+POP DI 
+
+
+PUSH BX
+PUSH AX 
+xor AX,AX 
+xor BX,BX 
+xor cx,cx 
 endm
 
 
 
 
-;45,42,2,6,8,9,32,65,1,55
+GET_COLOR MACRO valor
+LOCAL DRAW_RED,DRAW_BLUE,DRAW_YELLOW,DRAW_GREEN,DRAW_WHITE,FIN
+    CMP valor,20
+    JLE DRAW_RED 
+    CMP valor,40
+    JLE DRAW_BLUE
+    CMP valor,60
+    JLE DRAW_YELLOW
+    CMP valor,80
+    JLE DRAW_GREEN
+    CMP valor,100
+    JLE DRAW_WHITE
+    DRAW_RED:
+        MOV CX,12
+        JMP FIN 
+    DRAW_BLUE:
+        MOV CX,9
+        JMP FIN 
+    DRAW_YELLOW:
+        MOV CX,14
+        JMP FIN 
+    DRAW_GREEN:
+        MOV CX,10
+        JMP FIN 
+    DRAW_WHITE:
+        MOV CX,15
+    FIN:
+endm
 
 
+GET_ANCHO macro 
+    MOV BX,2
+    MUL BX 
+    MOV BX,AX 
+    MOV AX,310
+    DIV BX  
+endm
 
-bubble macro buffer
-LOCAL INICIO, FIN, CICLO1
+
+GET_MAYOR macro cadena 
+	local inicio,cambiar,fin 
+		xor dx,dx 
+		mov di,1
+		mov dl,0
+		mov dl,cadena[0]
+
+		inicio:
+			cmp di,SIZEOF cadena
+			je fin 
+			cmp cadena[di],'$'
+			je fin 
+			cmp cadena[di],dl
+			jg cambiar
+			inc di 
+			jmp inicio
+		cambiar:
+			mov dl,cadena[di]
+			inc di 
+			jmp  inicio
+		fin:
+			mov ax,dx
+			;push ax 
+			;ConvertirString num
+			;print saltoLinea
+			;print saltoLinea
+			;print num
+			;pop ax 
+			;calcularAltura cadena[0]
+	endm
+
+    
+Sound macro hz
+	mov al, 86h
+	out 43h, al
+	mov ax, (1193180 / hz) ;numero de hz
+	out 42h, al
+	mov al, ah
+	out 42h, al 
+	in al, 61h
+	or al, 00000011b
+	out 61h, al
+	delay 1000 ;mando a ejecutar el delay para que se escuche el sonido por varios segundos
+	 ; apagar la bocina
+	in al, 61h
+	and al, 11111100b
+	out 61h, al
+endm
+
+
+Delay macro const
+LOCAL D1, D2, FIN
 PUSH SI
 PUSH DI
-
-MOV CX, 15
-MOV SI, 0
-MOV DI, 0
-
-CICLO1:
-    PUSH CX
-    MOV SI, OFFSET buffer
-    MOV DI, SI
-CICLO2:
-    INC DI
-    MOV AL, [SI]
-    CMP AL, [DI]
-    JA INTERCAMBIO
-    JB MENOR
-
-INTERCAMBIO:
-    MOV AH, [DI]
-    MOV [DI], AL
-    MOV [SI], AH
-MENOR:
-    INC SI
-    LOOP CICLO2
-    POP CX
-    LOOP CICLO1
+MOV SI, const
+D1:
+	DEC SI
+	JZ FIN
+	MOV DI, const
+D2:
+	DEC DI
+	JNZ D2
+	JMP D1
 FIN:
-    printChar arraynumeros[0]
+	POP DI
+	POP SI
 endm
 
 
 
 
+CLEAR_SCREEN MACRO 
+    ;MOV AX,0600H    ;06 TO SCROLL & 00 FOR FULLJ SCREEN
+    ;MOV BH,71H      ;ATTRIBUTE 7 FOR BACKGROUND AND 1 FOR FOREGROUND
+    ;MOV CX,0000H    ;STARTING COORDINATES
+    ;MOV DX,184FH    ;ENDING COORDINATES
+    ;INT 10H        ;FOR VIDEO DISPLAY
+    ;MOV AH,4CH    ;RETURN TO DOS MODE
+    ;INT 21H
+    ORDENAR_TOPPUNTOS
+ENDM
 
 
 
+LOOP_MENSAJE1 MACRO caracter, columna, linea
+	;REPOSICIONAR EL CURSOR POSICION 20, 0
+	MOV AH, 02H
+	MOV BH, 0 	;Página de vídeo
+	MOV DH, linea 	;Línea donde situar el cursor
+	MOV DL, columna ;Columna donde situar el cursor
+	INT 10H
+	; ESCRIBIR PUNTEO
+	MOV AH, 09H
+	MOV AL, caracter	; Código ASCII del carácter a escribir.
+	MOV BH, 0	; Página de vídeo donde escribir el carácter.
+	MOV BL, 0Fh ; Atributo ó color que va a tener el carácter.  
+	MOV CX, 1 	; Cantidad de veces que se debe escribir el carácter, uno a continuación de otro
+	INT 10h
+ENDM
+
+
+CANT_ELEMENTOS MACRO buffer
+LOCAL INICIO, FIN
+    MOV DI, 0
+    MOV SI, 0
+        
+    INICIO:
+        CMP buffer[DI], '$'
+        JE FIN
+        INC SI
+        INC DI
+        JMP INICIO
+    FIN:
+        MOV AX, SI    
+
+ENDM
 
 
 
+DRAW_BORDE_BARRA MACRO 
+LOCAL INICIO, FIN
+local SUPERIOR, INFERIOR, IZQUIERDO, DERECHO, REPETIR, REPETIR_INFERIOR, REPETIR_IZQUIERDO, REPETIR_DERECHO, STOP
+	;MARGEN SUPERIOR
+    LOOP_BORDE 1610
+	; MARGEN INFERIOR
+    LOOP_BORDE 58570
+	
+	
+    LOOP_MARGEN 1610, 5Ah
+
+    LOOP_MARGEN 1915, 5Ah
+	
+    STOP:
 
 
-
-
-
-
-ordenar2 macro buffer
-LOCAL INICIO, GETPUNTO,GETPUNTO1, FIN, ENDF
-
-print buffer
-
-PUSH DI
-PUSH AX
-PUSH SI
-MOV DI, 0
-MOV SI, 0
-INICIO:
-    MOV AL,buffer[DI] 
-    CMP al, '+'
-    JE GETPUNTO1
-    CMP al, '$'
-    JE ENDF
-    INC DI
-    JMP INICIO
-GETPUNTO1:
-    INC DI
-    JMP GETPUNTO    
-GETPUNTO:
-    MOV AL, buffer[DI]
-    CMP AL, '*'
-    JE FIN 
-    MOV arraypuntos[SI], AL
-    INC DI
-    INC SI 
-    JMP GETPUNTO
-FIN:
-MOV SI, 0
-INC DI 
-CovertirAscii arraypuntos
-ConvertirString arraypuntos
-print arraypuntos
-
-
-JMP INICIO
-
-ENDF:
-POP SI
-POP AX
-POP DI
 endm
+
+LOOP_BORDE MACRO pixel
+LOCAL SUPERIOR, REPETIR
+    ;MARGEN SUPERIOR	
+	MOV DI, pixel ;pixel de inicio = esquina superior izquierda
+	MOV DX, 0Fh ; color 
+	MOV CX, 131h
+	
+		SUPERIOR:
+			MOV [DI],dx 
+			INC DI 	
+		REPETIR:
+		loop SUPERIOR
+ENDM
+
+LOOP_MARGEN MACRO pixel, tope
+LOCAL IZQUIERDO, REPETIR_IZQUIERDO
+	MOV DI, pixel ;pixel de inicio = esquina superior izquierda
+	MOV DX, 0Fh ; color 
+	MOV CX, tope
+	
+		IZQUIERDO:
+			MOV [DI],dx 
+			ADD DI, 640 	
+		REPETIR_IZQUIERDO:
+		loop IZQUIERDO
+ENDM

@@ -195,7 +195,7 @@ ENDM
 
 ;=============================== DIBUJAR LOS BLOQUES 
 DRAW_BLOCK macro 
-	local BUCLE,REPETIR, fin
+	local LOOP_FOR,REPETIR
 	
 		MOV BX, 0 
 		MOV DI, 6736 ;pixel de inicio = esquina superior izquierda
@@ -203,7 +203,7 @@ DRAW_BLOCK macro
 		MOV DX, 5 ; color 
 		MOV CX, 3FC0h
 	
-		BUCLE:
+		LOOP_FOR:
 			MOV [DI],dx 
 			INC DI 
 			INC SI 
@@ -223,7 +223,7 @@ DRAW_BLOCK macro
 			MOV BH, 0 
 		
 		REPETIR:
-		loop BUCLE
+		loop LOOP_FOR
 	endm
 
 

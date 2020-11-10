@@ -2,6 +2,7 @@
 include amacros.inc
 include alogin.inc
 include ajuego.inc
+include aordenar.inc
 ;=======================SECCION DE EJECUTABLE
 .model small
 .stack  
@@ -61,6 +62,19 @@ puntaje         db 2 dup('0')
 timerseg        db 2 dup('0') 
 timermin        db 2 dup('0') 
 timerhor        db 2 dup('0') 
+numeros         db 25,100,60,10,2,35,14,96,54,6,  '$'
+num             db 100 dup('$')
+datos           db 20 DUP ('$')
+
+
+arr dw 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 5
+
+i   dw  ? 
+j   dw  ?
+p   dw  0                           ;START OF THE ARRAY, EQUALS TO 0.
+r   dw  14                          ;END OF THE ARRAY, EQUALS TO A.LENGTH - 1.
+q   dw  ?
+x   dw  ?
 
 ;======================
 
@@ -85,27 +99,25 @@ usuarionoexiste db 10,13,'Usuario ingresado correctamente ',10,13,'$'
 
 ;=========login admin
 
-encabadmin      db 10,13,'1) Top 10 putnos',10,13,'2) Top 10 tiempos',10,13, '3) Salir', 10,13,10,13, 'Escoja Una opcion:','$'  
+encabadmin      db 10,13,'1) Top 10 puntos',10,13,'2) Top 10 tiempos',10,13, '3) Salir', 10,13,10,13, 'Escoja Una opcion:','$'  
 salto           db 10,13,'$'
 
+encabpuntos     db 10,13,'1) Ordenamineto BubbleSort',10,13,'2) Ordenamiento QuickSort',10,13, '3) Ordenamiento ShellSort', 10,13, '4) Salir' , 10,13, 'Escoja Una opcion:','$'  
 
+encaburbuja     db 10,13,'================ ORDENAMIENTO BURBUJA ================', 10,13,'$'  
 
+encaborden      db 10,13,'1) Ascendente ',10,13,'2) Descendente',10,13, 'Escoja Una opcion:','$'  
 
-;================ archivo
+encavel         db 10,13, 'Velocidad:','$'  
 
-filepath    db 100 dup('$') ; ruta archivo
-buffread    db 500 dup('$') ; buffer lectura
-buffwrite   db 500 dup('$') ; buffer escritura
-handlefile  dw ?
+;================ MENSAJES
+
 
 msmError5   db 0ah,0dh,'Nombre de usuario demaciado largo','$'
 msmError6   db 0ah,0dh,'Password de usuario demaciado largo','$'
 msmError7   db 0ah,0dh,'Password no es numerica','$'
 
-msgOpenFile db 0ah,0dh, 'Ingrese el nombre de archivo: ', 32, '$'
 
-mensaje   db 0ah,0dh,'USERS IGUALES','$'
-mensaje1   db 0ah,0dh,'estoy aqui','$'
 
 
 ;======================= SEGMENTO CODIGO ==================
@@ -115,12 +127,12 @@ main proc
     print encab
     getChar
     cmp al,'1' 
-    je NUEVO_JUEGO
+    je BUBBLE_ASC
     cmp al,'2'
     je REGISTRAR
-    ;cmp al,'3'
-    ;je ENDGAME
-    ;jmp MENUPRINCIPAL
+    cmp al,'3'
+    je ENDGAME
+    jmp MENUPRINCIPAL
 
 
 
@@ -172,9 +184,8 @@ USERLOGUEADO:
     print encabadmin
 
     getChar
-
     cmp al,'1' 
-    ;je TOPPUNTOS
+    je TOPPUNTOS
     cmp al,'2'
     ;je TOPTIEMPOS
     cmp al,'3'
@@ -183,30 +194,50 @@ USERLOGUEADO:
 JMP USERLOGUEADO
 
 
+TOPPUNTOS:
+    ;ORDENAR_TOPPUNTOS
+
+    print encabpuntos
+    getChar
+    
+    cmp al,'1' 
+    je BUBBLESORT_ORDEN
+    cmp al,'2'
+    ;je TOPTIEMPOS
+    cmp al,'3'
+    je MENUPRINCIPAL
 
 
 
+BUBBLESORT_ORDEN:
+    print encaburbuja
+    print encaborden
+    getChar
+    cmp al,'1' 
+    je BUBBLE_ASC
+    cmp al,'2'
+    je BUBBLE_DES
+    
+    JMP BUBBLESORT_ORDEN
 
-ErrorAbrir:
-	;print msmError1
-	getChar
-	jmp MENUPRINCIPAL
-ErrorLeer:
-;	print msmError2
-;	getChar
-	jmp MENUPRINCIPAL
-ErrorCrear:
-;	print msmError3
-;	getChar
-	jmp MENUPRINCIPAL
-ErrorEscribir:
-;	print msmError4
-;	getChar
-	jmp MENUPRINCIPAL
 
+BUBBLE_ASC:
+    ;print encavel
+    ;getChar
+    ORDENAR_TOPPUNTOS
+    BUBBLE_SORT
+    
+BUBBLE_DES:
+    ;print encavel
+    ;getChar
+
+    ORDENAR_TOPPUNTOS
+    BUBBLE_SORT_DESC
+
+
+    
 
 ENDGAME:
- ;   print final
     mov ah,4ch
     int 21h
 
@@ -216,16 +247,6 @@ main endp
 
 
 ;======================= SECCION JUEGO =============================
-
-PRUEBA:
-    ENTER_VIDEOMODE
-    DRAW_USER
-        DRAW_BORDE
-        DRAW_NIVEL
-        DRAW_PUNTOS
-    DRAW_TIMER
-
-JMP FIN
 
 
 
@@ -286,18 +307,11 @@ NUEVO_JUEGO:
         DRAW_PUNTOS
         DRAW_BLOCK
         
-
         CALL MOVERBALL ; mover la pelota
         CALL PINTBALL
         CALL MOVEPADDLES
         CALL DRAWPADDLES
         JMP VERIFICAR_TIEMPO
-
-
-
-
-
-
     SALIR:
         ENTER_VIDEOMODE
         DRAW_BORDE
@@ -352,8 +366,6 @@ RESET_POSICION_PELOTA endp
 ;===== PROCEDIMIENTO PARA MOVER PELOTA
 MOVERBALL proc near
     
-
-
     BLOQUES:        
         ; COLICION CON BLOQUES
         MOV AH, 0Dh	
@@ -453,10 +465,6 @@ MOVERBALL proc near
     NEG_VELOCIDAD_X:
         NEG BALL_VELOCIDADX
         RET
-    
-   
-    
-
     RESET_POSICION:
         CALL RESET_POSICION_PELOTA
         RET
@@ -599,7 +607,6 @@ WRITE_TIME proc near
     MOV CX, 2
     RET
 WRITE_TIME endp
-
 
 
 
